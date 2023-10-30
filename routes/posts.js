@@ -30,6 +30,9 @@ router.get('/:postId', verifyToken, async (req, res) => {
     }
 });
 
+
+
+
 // Route to create a new post and save it to the database
 // Protected by verifyToken middleware
 router.post('/',verifyToken , async(req, res) => {
@@ -39,7 +42,8 @@ router.post('/',verifyToken , async(req, res) => {
         text: req.body.text,
         hashtag: req.body.hashtag,
         location: req.body.location,
-        url: req.body.url
+        url: req.body.url,
+        topic:req.body.topic
     });
 
     try {
@@ -77,6 +81,7 @@ router.patch('/:postId', verifyToken, async(req,res)=>{
         res.send({Message:err})
     }
 
+
 })
 
 // Route to delete a specific post by its ID
@@ -90,6 +95,28 @@ router.delete('/:postId', verifyToken,  async (req, res) => {
         res.send({ Message: err });
     }
 });
+
+
+router.get('/topics/:topicName', verifyToken, async (req, res) => {
+    try {
+        // Get the topic from the URL parameters
+        const topicQuery = req.params.topicName;
+
+        // Find posts that match the specified topic
+        const postsByTopic = await Post.find({ topic: topicQuery });
+
+        if (postsByTopic.length === 0) {
+            return res.status(404).send({ Message: `No posts found for topic: ${topicQuery}` });
+        }
+
+        res.send(postsByTopic);
+    } catch (err) {
+        res.send({ Message: err });
+    }
+});
+
+
+
 
 // Export the router to be used in other parts of the application
 module.exports = router;

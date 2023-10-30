@@ -20,6 +20,9 @@ app.use(bodyParser.json()); // Use body-parser to parse incoming JSON requests
 app.use('/api/posts', postsRoute); // API route for posts
 app.use('/api/user', authRoute); // API route for user authentication (currently commented out)
 
+
+
+
 // Homepage route
 app.get('/', (req, res) => {
     res.send('Homepage');
