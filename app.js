@@ -1,36 +1,43 @@
+// Import necessary libraries and modules
 const express = require('express');
-const app  =express();
-const mongoose = require('mongoose')
-require('dotenv/config')
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+require('dotenv/config');
 
-const postsRoute = require ('./routes/posts')
-const bodyParser = require('body-parser')
+// Import routes
+const postsRoute = require('./routes/posts');
+const authRoute = require('./routes/auth'); // Authentication route (currently commented out)
 
-app.use(bodyParser.json())
 
-app.use('/posts',postsRoute)//this is pointing to the routes
 
-app.get('/', (req,res) =>{
+// Initialize Express app
+const app = express();
 
- res.send('Homepage')
+// Middleware
+app.use(bodyParser.json()); // Use body-parser to parse incoming JSON requests
 
-})
+// Define the routes for the application
+app.use('/api/posts', postsRoute); // API route for posts
+app.use('/api/user', authRoute); // API route for user authentication (currently commented out)
 
-mongoose.connect(process.env.BD_Connector, {
- useNewUrlParser: true,
- useUnifiedTopology: true
-})
-.then(() => {
- console.log('DB is now connected');
-})
-.catch(err => {
- console.error('DB connection error:', err.stack);
+// Homepage route
+app.get('/', (req, res) => {
+    res.send('Homepage');
 });
 
+// Connect to the database
+mongoose.connect(process.env.BD_Connector, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => {
+    console.log('DB is now connected'); // Log on successful DB connection
+})
+.catch(err => {
+    console.error('DB connection error:', err.stack); // Log any DB connection errors
+});
 
-app.listen(3000, ()=>{
-  console.log('Server is up and running')
-
-
-} )
-
+// Start the server on port 3000
+app.listen(3000, () => {
+    console.log('Server is up and running');
+});
