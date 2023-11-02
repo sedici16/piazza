@@ -115,6 +115,63 @@ router.get('/topics/:topicName', verifyToken, async (req, res) => {
     }
 });
 
+router.patch('/like/:postId', verifyToken, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.postId);
+
+        if (!post) {
+            return res.status(404).json({ err: 'Post not found' });
+        }
+
+        const userId = String(req.user._id);
+
+        // Convert ObjectIds to strings for the comparison
+        if (post.likedBy.map(id => String(id)).includes(userId)) {
+            return res.status(400).json({ error: 'You have already liked this post.' });
+        }
+
+        post.likes += 1;
+        post.likedBy.push(req.user._id); // Add the user's ID to the likedBy array
+        
+        const updatePost = await post.save();
+        
+        res.json(updatePost);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+router.patch('/dislike/:postId', verifyToken, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.postId);
+
+        if (!post) {
+            return res.status(404).json({ err: 'Post not found' });
+        }
+
+        const userId = String(req.user._id);
+
+        // Convert ObjectIds to strings for the comparison
+        if (post.dislikedBy.map(id => String(id)).includes(userId)) {
+            return res.status(400).json({ error: 'You have disliked  this post.' });
+        }
+
+        post.dislikes += 1;
+        post.dislikedBy.push(req.user._id); // Add the user's ID to the likedBy array
+        
+        const updatePost = await post.save();
+        
+        res.json(updatePost);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+
 
 
 
