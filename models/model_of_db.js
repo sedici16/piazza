@@ -49,7 +49,21 @@ const PostSchema = new mongoose.Schema({
     dislikedBy: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
+  }],
+
+  comments: [{
+    text: {
+      type: String,
+      required: false // Allowing comments to be added without text (if that's your use case).
+    },
+    commentedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true // It's still a good idea to know who made the comment.
+    }
   }]
+  
+
     
 });
 

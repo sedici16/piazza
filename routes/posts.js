@@ -168,12 +168,41 @@ router.patch('/dislike/:postId', verifyToken, async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+
 });
 
+router.patch('/comment/:postId', verifyToken, async (req,res) =>{
 
+    try{
+            const post = await Post.findById(req.params.postId);
 
+            if (!post){
+                return res.status(404).json({ err: 'Post not found' });
 
+        
+            }
+            
+            const commentText = req.body.text;
+            const userId = req.user._id;
+
+            // Create a new comment object
+            const newComment = {
+              text: commentText,
+              commentedBy: userId // Make sure this is a valid ObjectId
+            };
+            
+            post.comments.push(newComment);
+
+            // Save the updated post
+            await post.save();
+        
+            // Send a success response
+            res.status(200).json({ message: 'Comment added successfully', post });
+          } catch (error) {
+            res.status(500).json({ error: 'something has gone wrong!' });
+          }
+        });
 
 
 // Export the router to be used in other parts of the application
-module.exports = router;
+module.exports = router
