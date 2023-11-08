@@ -75,7 +75,7 @@ router.post('/login', async (req,res)=>{
 
 //generate a key auth token for the signed in user
 //associate the user id with a token secret
-const token = jsonwebtoken.sign({_id:user._id}, process.env.TOKEN_SECRET)
+const token = jsonwebtoken.sign({_id:user._id, username: user.username}, process.env.TOKEN_SECRET)
 res.header('auth-token', token).send({'auth-token':token})
 
  })

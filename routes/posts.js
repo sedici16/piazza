@@ -6,7 +6,8 @@ const Post = require('../models/model_of_db');
 const req = require('express/lib/request');
 const { ConnectionStates } = require('mongoose');
 const { verify } = require('jsonwebtoken')
-const verifyToken = require('../verifyToken')
+const verifyToken = require('../verifyToken');
+const { getRounds } = require('bcryptjs');
 
 // Route to get all posts from the database
 // Protected by verifyToken middleware to ensure only authenticated users can access
@@ -19,14 +20,72 @@ router.get('/', verifyToken, async (req, res) => {
     }
 });
 
+
+//browse expired posts
+router.get('/expired-posts-history', verifyToken, async (req, res) => {
+
+    try{
+
+        const expiredPostHistory =await Post.find ({status: 'Expired'});
+        res.json(expiredPostHistory);
+        } catch (err){
+            res.status(500).json({error: err.message});
+
+        }
+});
+
+
+
+
+
+// get the posts that are most liked without grouping by topic
+router.get('/most-liked-posts', verifyToken, async (req, res) => {
+    try {
+        const mostLikedPosts = await Post.aggregate([
+            { $sort: { likes: -1 } } // sort likes in descending order
+            // No group stage, so it will just sort all posts by likes
+        ]);
+
+        res.json(mostLikedPosts);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+// get the posts that are most liked without grouping by topic
+router.get('/most-disliked-posts', verifyToken, async (req, res) => {
+    try {
+        const mostDisLikedPosts = await Post.aggregate([
+            { $sort: { dislikes: -1 } } // sort likes in descending order
+            // No group stage, so it will just sort all posts by likes
+        ]);
+
+        res.json(mostDisLikedPosts);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+
+
+
 // Route to get a specific post by its ID from the database
 // Protected by verifyToken middleware
 router.get('/:postId', verifyToken, async (req, res) => {
     try {
         const getPostById = await Post.findById(req.params.postId);
+
+        if (!getPostById){
+            return res.status(404).json({err: 'post not found'});
+        }
+
+     
         res.send(getPostById);
+    
     } catch (err) {
-        res.send({ Message: err });
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -36,8 +95,20 @@ router.get('/:postId', verifyToken, async (req, res) => {
 // Route to create a new post and save it to the database
 // Protected by verifyToken middleware
 router.post('/',verifyToken , async(req, res) => {
+    console.log(req.user);
+    //define the allowed topics
+    const allowedTopics =['Politics', 'Health', 'Sport', 'Tech'];
+
+    //check if the topic provided by the user is allowed
+
+    if (!allowedTopics.includes(req.body.topic)){
+
+        return res.status(400).json({error: 'Sorry your topic is not allowed: only Politics, Health, Sport, or Tech '})
+
+    }
+
     const postData = new Post({
-        user: req.body.user,
+        user: req.user.username,//use the username from the log in
         title: req.body.title,
         text: req.body.text,
         hashtag: req.body.hashtag,
@@ -50,7 +121,7 @@ router.post('/',verifyToken , async(req, res) => {
         const postToSave = await postData.save();
         res.send(postToSave);
     } catch(err) {
-        res.send({ Message: err });
+        res.status(400).send({ Message: err.message });
     }
 });
 
@@ -62,6 +133,7 @@ router.patch('/:postId', verifyToken, async(req,res)=>{
 
     try{
 
+        
         const updatePostById = await Post.updateOne(
         {_id:req.params.postId},//this finds the record by parameter entered in the url
         {$set:{ //set everything to the new data
@@ -123,15 +195,26 @@ router.patch('/like/:postId', verifyToken, async (req, res) => {
             return res.status(404).json({ err: 'Post not found' });
         }
 
-        const userId = String(req.user._id);
+
+        if (post.status === 'Expired'){
+
+            return res.status(403).json ({error: 'Sorry you cannot like expired post' })
+        }
+
+        // Check if the user is trying to like their own post
+        if (post.user === req.user.username) {
+        return res.status(400).json({ error: 'You cannot like your own post.' });
+         }
+
+        const username = req.user.username;
 
         // Convert ObjectIds to strings for the comparison
-        if (post.likedBy.map(id => String(id)).includes(userId)) {
+        if (post.likedBy.includes(username)) {
             return res.status(400).json({ error: 'You have already liked this post.' });
         }
 
         post.likes += 1;
-        post.likedBy.push(req.user._id); // Add the user's ID to the likedBy array
+        post.likedBy.push(username); // Add the user's ID to the likedBy array
         
         const updatePost = await post.save();
         
@@ -151,15 +234,28 @@ router.patch('/dislike/:postId', verifyToken, async (req, res) => {
             return res.status(404).json({ err: 'Post not found' });
         }
 
-        const userId = String(req.user._id);
+        const username = req.user.username;
 
         // Convert ObjectIds to strings for the comparison
-        if (post.dislikedBy.map(id => String(id)).includes(userId)) {
+        if (post.dislikedBy.includes(username)) {
             return res.status(400).json({ error: 'You have disliked  this post.' });
         }
 
+        
+        if (post.status === 'Expired'){
+
+            return res.status(403).json ({error: 'Sorry you cannot dislike expired post' })
+        }
+        
+        ///you cannot dislike your ownn post
+        if (post.user === req.user.username) {
+            return res.status(400).json({ error: 'You cannot dislike your own post.' });
+             }
+        //add the dislikes user names to the list
+        
+        
         post.dislikes += 1;
-        post.dislikedBy.push(req.user._id); // Add the user's ID to the likedBy array
+        post.dislikedBy.push(username); // Add the user's ID to the likedBy array
         
         const updatePost = await post.save();
         
@@ -178,17 +274,21 @@ router.patch('/comment/:postId', verifyToken, async (req,res) =>{
 
             if (!post){
                 return res.status(404).json({ err: 'Post not found' });
-
         
+            }
+
+            if (post.status === 'Expired') {
+                return res.status(403).json({ error: 'Cannot comment on an expired post' });
             }
             
             const commentText = req.body.text;
-            const userId = req.user._id;
+            //const userId = req.user._id;
+            const username = req.user.username;
 
             // Create a new comment object
             const newComment = {
               text: commentText,
-              commentedBy: userId // Make sure this is a valid ObjectId
+              commentedBy: username // Make sure this is a valid ObjectId
             };
             
             post.comments.push(newComment);
@@ -202,6 +302,7 @@ router.patch('/comment/:postId', verifyToken, async (req,res) =>{
             res.status(500).json({ error: 'something has gone wrong!' });
           }
         });
+
 
 
 // Export the router to be used in other parts of the application
