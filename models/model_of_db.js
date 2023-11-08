@@ -1,4 +1,6 @@
+const { date } = require('joi');
 const mongoose = require('mongoose');
+const LIFE_IN_MINUTES = 5
 
 const PostSchema = new mongoose.Schema({
     user: {
@@ -27,7 +29,8 @@ const PostSchema = new mongoose.Schema({
     },
     topic: {
         type: String,
-        required: true
+        required: true,
+        enum:['Politics', 'Health', 'Sport', 'Tech'],
     },
     date: {
         type: Date,
@@ -41,15 +44,11 @@ const PostSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    likedBy: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }],
+ 
+    likedBy: [{ type: String }],
 
-    dislikedBy: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-  }],
+    dislikedBy: [{ type: String }],
+
 
   comments: [{
     text: {
@@ -57,14 +56,59 @@ const PostSchema = new mongoose.Schema({
       required: false // Allowing comments to be added without text (if that's your use case).
     },
     commentedBy: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: 'User',
       required: true // It's still a good idea to know who made the comment.
     }
-  }]
-  
+  }],
+
+  ///expired and not expired posts part of the schema
+
+  status : {
+
+    type: String,
+    required: true,
+    default:'Live',
+    enum:['Live', 'Expired']
+
+  },
+
+  createdAt:{
+    type: Date,
+    default:Date.now
+    
+  },
+
+  expiredAt:{
+    type: Date,
+    default: () => new Date(Date.now() + LIFE_IN_MINUTES * 60 * 1000)
+
+
+  }, 
+
+
+// get the time to expiry but do not store in the DB
+}, {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true } 
+    
 
     
+});
+
+PostSchema.virtual('timeLeft').get(function(){
+  const now= new Date();
+  const expiry = this.expiredAt.getTime();
+  const timeLeft = expiry - now
+
+  // if expired return zero
+  if (timeLeft < 0 ){
+    return 0;
+  }
+  
+  //convert milliseconds to minutes and return
+return Math.floor(timeLeft/(1000*60));
+
 });
 
 module.exports = mongoose.model('posts', PostSchema);

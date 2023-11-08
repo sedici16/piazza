@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 require('dotenv/config');
+const expirePostsTask = require('./tasks/expirePostsCron');
 
 // Import routes
 const postsRoute = require('./routes/posts');
@@ -12,6 +13,11 @@ const authRoute = require('./routes/auth'); // Authentication route (currently c
 
 // Initialize Express app
 const app = express();
+
+
+//Initialised the cron job
+
+expirePostsTask();
 
 // Middleware
 app.use(bodyParser.json()); // Use body-parser to parse incoming JSON requests
