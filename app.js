@@ -5,6 +5,9 @@ const bodyParser = require('body-parser');
 require('dotenv/config');
 const expirePostsTask = require('./tasks/expirePostsCron');
 
+//cors policies libraries
+const cors = require('cors');
+
 // Import routes
 const postsRoute = require('./routes/posts');
 const authRoute = require('./routes/auth'); // Authentication route (currently commented out)
@@ -19,13 +22,15 @@ const app = express();
 
 expirePostsTask();
 
+//use cors
+app.use(cors({ origin: 'http://localhost:3001' }));//listen for front end on port 3001
+
 // Middleware
 app.use(bodyParser.json()); // Use body-parser to parse incoming JSON requests
 
 // Define the routes for the application
 app.use('/api/posts', postsRoute); // API route for posts
 app.use('/api/user', authRoute); // API route for user authentication (currently commented out)
-
 
 
 
