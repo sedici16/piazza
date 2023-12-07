@@ -1,3 +1,6 @@
+//script derived from the lab classes
+//The script is a middleware fucntion and it authenticates HTTP requests using JSON webtoken (JWT)
+//import the libraries
 const jsonwebtoken = require('jsonwebtoken');
 
 function auth(req, res, next) {
