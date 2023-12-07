@@ -1,5 +1,7 @@
 // Import required modules and libraries
+// the main backbone of the app, containing all the major routes
 
+//File imports
 const express = require('express');
 const router = express.Router();
 const Post = require('../models/model_of_db');
