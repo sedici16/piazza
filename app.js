@@ -5,7 +5,8 @@ const bodyParser = require('body-parser');
 require('dotenv/config');
 const expirePostsTask = require('./tasks/expirePostsCron');
 
-//cors policies libraries
+//cors policies libraries, used to handle Cross-Origin Resource Sharing (CORS) policies.
+//used this as the front end and backend requests have different origins.
 const cors = require('cors');
 
 // Import routes
@@ -19,7 +20,6 @@ const app = express();
 
 
 //Initialised the cron job
-
 expirePostsTask();
 
 //use cors
@@ -31,8 +31,6 @@ app.use(bodyParser.json()); // Use body-parser to parse incoming JSON requests
 // Define the routes for the application
 app.use('/api/posts', postsRoute); // API route for posts
 app.use('/api/user', authRoute); // API route for user authentication (currently commented out)
-
-
 
 // Homepage route
 app.get('/', (req, res) => {
