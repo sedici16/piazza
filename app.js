@@ -1,3 +1,4 @@
+//the main part of the app where requested are handled, diverted to the posts, auth or homepage, also connect to the DB.
 // Import necessary libraries and modules
 const express = require('express');
 const mongoose = require('mongoose');
