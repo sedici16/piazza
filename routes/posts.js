@@ -35,9 +35,6 @@ router.get('/expired-posts-history', verifyToken, async (req, res) => {
 });
 
 
-
-
-
 // get the posts that are most liked without grouping by topic
 router.get('/most-liked-posts', verifyToken, async (req, res) => {
     try {
@@ -68,9 +65,6 @@ router.get('/most-disliked-posts', verifyToken, async (req, res) => {
 });
 
 
-
-
-
 // Route to get a specific post by its ID from the database
 // Protected by verifyToken middleware
 router.get('/:postId', verifyToken, async (req, res) => {
@@ -88,8 +82,6 @@ router.get('/:postId', verifyToken, async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
-
 
 
 // Route to create a new post and save it to the database
@@ -168,6 +160,7 @@ router.delete('/:postId', verifyToken,  async (req, res) => {
     }
 });
 
+//the route to get the topics under a specifi topic name
 
 router.get('/topics/:topicName', verifyToken, async (req, res) => {
     try {
@@ -187,6 +180,7 @@ router.get('/topics/:topicName', verifyToken, async (req, res) => {
     }
 });
 
+// the route to like a post by postid
 router.patch('/like/:postId', verifyToken, async (req, res) => {
     try {
         const post = await Post.findById(req.params.postId);
@@ -225,6 +219,7 @@ router.patch('/like/:postId', verifyToken, async (req, res) => {
     }
 });
 
+//the route to dislike a post by postid
 
 router.patch('/dislike/:postId', verifyToken, async (req, res) => {
     try {
@@ -267,6 +262,8 @@ router.patch('/dislike/:postId', verifyToken, async (req, res) => {
 
 });
 
+
+//the route to comment a post by post id
 router.patch('/comment/:postId', verifyToken, async (req,res) =>{
 
     try{
@@ -282,13 +279,13 @@ router.patch('/comment/:postId', verifyToken, async (req,res) =>{
             }
             
             const commentText = req.body.text;
-            //const userId = req.user._id;
+            
             const username = req.user.username;
 
             // Create a new comment object
             const newComment = {
               text: commentText,
-              commentedBy: username // Make sure this is a valid ObjectId
+              commentedBy: username 
             };
             
             post.comments.push(newComment);
