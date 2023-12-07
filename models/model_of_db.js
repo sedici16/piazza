@@ -2,6 +2,7 @@ const { date } = require('joi');
 const mongoose = require('mongoose');
 const LIFE_IN_MINUTES = 5
 
+// the Post Schema used to push, delete and create posts in the mongodb
 const PostSchema = new mongoose.Schema({
     user: {
         type: String,
@@ -53,12 +54,12 @@ const PostSchema = new mongoose.Schema({
   comments: [{
     text: {
       type: String,
-      required: false // Allowing comments to be added without text (if that's your use case).
+      required: false // Allowing comments to be added without text.
     },
     commentedBy: {
       type: String,
       ref: 'User',
-      required: true // It's still a good idea to know who made the comment.
+      required: true 
     }
   }],
 
