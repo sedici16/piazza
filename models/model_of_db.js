@@ -1,3 +1,4 @@
+//imports and defintion of variables
 const { date } = require('joi');
 const mongoose = require('mongoose');
 const LIFE_IN_MINUTES = 5
