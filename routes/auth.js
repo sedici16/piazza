@@ -1,3 +1,5 @@
+//the authorisation script with several user input validation
+//The code is sourced from the lab classes
 const express = require('express')
 const router = express.Router()
 
@@ -7,7 +9,7 @@ const {registerValidation,loginValidation}= require('../validations/validation')
 const bcryptjs= require('bcryptjs')
 const jsonwebtoken = require ('jsonwebtoken')
 
-
+//the register route
 router.post('/register', async (req,res)=>{
 
  //validation to check user input
@@ -17,14 +19,13 @@ router.post('/register', async (req,res)=>{
  }
 
 //validation 2 check if the  user exists
-
 const userExists = await User.findOne({email:req.body.email})
 if (userExists){
  return res.status(400).send({message:'User already exist'})
 
 
 }
-//created a hased represenation of my password
+//created a hashed represenation of my password
 const salt= await bcryptjs.genSalt(5)
 const hashedPassword = await bcryptjs.hash(req.body.password,salt)
 
@@ -51,7 +52,7 @@ const hashedPassword = await bcryptjs.hash(req.body.password,salt)
 })
 
 
-////log in process
+////the log in route
 
 router.post('/login', async (req,res)=>{
 
